@@ -39,11 +39,6 @@ public sealed partial class DashboardQueryService
         var visibleInboxAccountIds = visibleInboxAccounts
             .Select(account => account.Id)
             .ToHashSet();
-        var allUserInboxAccountIds = await _dbContext.InboxAccounts
-            .AsNoTracking()
-            .Where(account => account.UserId == user.Id)
-            .Select(account => account.Id)
-            .ToListAsync(cancellationToken);
 
         var applications = await _dbContext.JobApplications
             .AsNoTracking()
@@ -77,11 +72,11 @@ public sealed partial class DashboardQueryService
                     reminder.Status))
             .ToListAsync(cancellationToken);
 
-        var applicationIdsWithAnyLinkedEmail = allUserInboxAccountIds.Count == 0
+        var applicationIdsWithAnyLinkedEmail = visibleInboxAccountIds.Count == 0
             ? []
             : await _dbContext.InboxEmails
                 .AsNoTracking()
-                .Where(email => allUserInboxAccountIds.Contains(email.InboxAccountId) && email.JobApplicationId.HasValue)
+                .Where(email => visibleInboxAccountIds.Contains(email.InboxAccountId) && email.JobApplicationId.HasValue)
                 .Select(email => email.JobApplicationId!.Value)
                 .Distinct()
                 .ToListAsync(cancellationToken);
